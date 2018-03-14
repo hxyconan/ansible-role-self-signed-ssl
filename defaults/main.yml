@@ -1,0 +1,13 @@
+---
+# Variables for self signed ssl installation
+cert_name: hostname
+cert_domain: example.net
+
+countryName_default: AU
+stateOrProvinceName_default: "New South Wales"
+localityName_default: Sydney
+organizationName_default: "WHATEVER Limited"
+commonName_default: "{{ cert_name }}.{{ cert_domain }}"
+
+alt_names_dns: "*.{{ commonName_default }}"
+

@@ -1,0 +1,36 @@
+---
+# Prepare to enable ssl 
+- name: Enable ssl relevant apache modules
+  apache2_module: "name={{ item }} state=present"
+  with_items:
+    - ssl
+    - headers
+  notify: restart apache
+
+- name: Copy over certificate config to /etc/ssl/ directory
+  template:
+    src: "templates/example-cert.conf"
+    dest: "/etc/ssl/{{ cert_name }}-cert.conf"
+    mode: 0644
+    force: yes
+
+- name: generate ssl private key and certificate in one command
+  command: openssl req -x509 -sha256 -nodes -days 3650 -newkey rsa:2048 -config {{ cert_name }}-cert.conf -keyout /etc/ssl/private/{{ cert_name }}-private-key.pem -out /etc/ssl/certs/{{ cert_name }}-cert.crt -subj "/C={{ countryName_default }}/ST={{ stateOrProvinceName_default }}/L={{ localityName_default }}/O={{ organizationName_default }}/CN={{ commonName_default }}"
+  args:
+    chdir: /etc/ssl/
+
+# server security setting required ssl-params
+- name: generate a new dhparam key
+  command: sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+
+- name: Copy over ssl-params.conf to /etc/apache2/conf-available directory
+  template:
+    src: "templates/ssl-params.conf"
+    dest: "/etc/apache2/conf-available/ssl-params.conf"
+    mode: 0644
+    force: yes
+
+- name: Enable ssl-params conf and restart Apache2
+  command: a2enconf ssl-params
+  notify: restart apache
+
